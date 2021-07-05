@@ -12,6 +12,9 @@ RSpec.describe "Posts", type: :request do
       it 'タイトルが正しく表示されていること' do
         expect(response.body).to include("新規投稿")
       end
+      it 'サブタイトルが正しく表示されていること' do
+        expect(response.body).to include("投稿の作成ページです")
+      end
     end
   end
 end
