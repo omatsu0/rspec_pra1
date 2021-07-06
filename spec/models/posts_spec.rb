@@ -24,4 +24,16 @@ RSpec.describe Post, type: :model do
       expect(@post.errors[:title]).to include("can't be blank")
     end
   end
+  context "データが正しく保存されない2" do
+    before do
+      @post = Post.new
+      @post.title = "タイトルタイトル"
+      @post.content = ""
+      @post.save
+    end
+    it "contetが入力されていないので保存されない" do
+      expect(@post).to be_invalid
+      expect(@post.errors[:content]).to include("can't be blank")
+    end
+  end
 end
