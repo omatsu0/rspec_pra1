@@ -1,52 +1,67 @@
 require 'rails_helper'
-
-require 'rails_helper'
-
-RSpec.describe Project, type: :model do
-  # ユーザー単位では重複したプロジェクト名を許可しないこと
-  it "does not allow duplicate project names per user" do
-    user = User.create(
-      first_name: "Joe",
-      last_name:  "Tester",
-      email:      "joetester@example.com",
-       password:   "dottle-nouveau-pavilion-tights-furze",
-     ) 
-     user.projects.create(
-       name: "Test Project",
-     )
  
-     new_project = user.projects.build(
-       name: "Test Project",
-     )
- 
-     new_project.valid?
-     expect(new_project.errors[:name]).to include("has already been taken")
-  end
- 
-   # 二人のユーザーが同じ名前を使うことは許可すること
-   it "allows two users to share a project name" do
-     user = User.create(
+ RSpec.describe Note, type: :model do
+   before do
+     @user = User.create(
        first_name: "Joe",
        last_name:  "Tester",
        email:      "joetester@example.com",
        password:   "dottle-nouveau-pavilion-tights-furze",
      )
  
-     user.projects.create(
+     @project = @user.projects.create(
        name: "Test Project",
      )
+   end
  
-     other_user = User.create(
-       first_name: "Jane",
-       last_name:  "Tester",
-       email:      "janetester@example.com",
-       password:   "dottle-nouveau-pavilion-tights-furze",
+   # ユーザー、プロジェクト、メッセージがあれば有効な状態であること
+   it "is valid with a user, project, and message" do
+     note = Note.new(
+       message: "This is a sample note.",
+       user: @user,
+       project: @project,
      )
+     expect(note).to be_valid
+   end
  
-     other_project = other_user.projects.build(
-       name: "Test Project",
-     )
+   # メッセージがなければ無効な状態であること
+   it "is invalid without a message" do
+     note = Note.new(message: nil)
+     note.valid?
+     expect(note.errors[:message]).to include("can't be blank")
+   end
  
-     expect(other_project).to be_valid
+   # 文字列に一致するメッセージを検索する
+   describe "search message for a term" do
+     before do
+       @note1 = @project.notes.create(
+         message: "This is the first note.",
+         user: @user,
+       )
+       @note2 = @project.notes.create(
+         message: "This is the second note.",
+         user: @user,
+       )
+       @note3 = @project.notes.create(
+         message: "First, preheat the oven.",
+         user: @user,
+       )
+     end
+ 
+     # 一致するデータが見つかるとき
+     context "when a match is found" do
+       # 検索文字列に一致するメモを返すこと
+       it "returns notes that match the search term" do
+         expect(Note.search("first")).to include(@note1, @note3)
+       end
+     end
+ 
+     # 一致するデータが1件も見つからないとき
+     context "when no match is found" do
+       # 空のコレクションを返すこと
+       it "returns an empty collection" do
+         expect(Note.search("message")).to be_empty
+       end
+     end
    end
  end
